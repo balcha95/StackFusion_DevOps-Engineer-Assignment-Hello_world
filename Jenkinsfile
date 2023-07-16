@@ -1,21 +1,21 @@
 pipeline {
-    agent { label 'slavenode1' }
+    agent { label 'slave2' }
 	
 
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
-        maven "maven"
+	        maven "maven"
     }
 
 	environment {	
-		DOCKERHUB_CREDENTIALS=credentials('new_docker_id')
-	} 
-    
-     stages {
+		DOCKERHUB_CREDENTIALS=credentials('devopsadmin')
+	}
+
+    stages { 
         stage('SCM Checkout') {
             steps {
                 // Get some code from a GitHub repository
-                git 'https://github.com/balcha95/Java-mvn-app2.git'
+                 git 'https://github.com/balcha95/StackFusion_DevOps-Engineer-Assignment-Hello_world.git'
             }
 		}
         stage('Maven Build') {
@@ -23,32 +23,42 @@ pipeline {
                 // Run Maven on a Unix agent.
                 sh "mvn -Dmaven.test.failure.ignore=true clean package"
             }
-			post {
-                   //If Maven was able to run the tests.even if some of the test
-                  //failed, record the test results and archive the jar file.
-              success{
-                    sh "cp target/mvn-hello-world.war /home/devopsadmin"
-                     }
-                 }
-        }         
-        stage("Docker build"){
-	        steps {
-			    sh 'docker version'
-				sh "docker build -t balcha/mvn-eta-app:${BUILD_NUMBER} ."
-				sh 'docker image list'
-				sh "docker tag balcha/mvn-eta-app:${BUILD_NUMBER} balcha/mvn-eta-app:latest"
-	            }
-	    }
-	    stage('Login2DockerHub') {
+		}
+           stage("Docker build") { 
             steps {
-				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-			} 
-        }      
-        stage('Push2DockerHub') {
+				sh 'docker version'
+					sh "docker build -t balcha/stackfusion:${BUILD_NUMBER} ."
+					sh 'docker image list'
+					sh "docker tag balcha/stackfusion:${BUILD_NUMBER} balcha/stackfusion:latest"
+            }
+        }
+		stage('Login2DockerHub') {
 
 			steps {
-				sh "docker push balcha/mvn-eta-app:latest"
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
 			}
 		}
+        stage('Approve - push Image to dockerhub'){
+            steps{
+                
+                //----------------send an approval prompt-------------
+                script {
+                   env.APPROVED_DEPLOY = input message: 'User input required Choose "yes" | "Abort"'
+                       }
+                //-----------------end approval prompt------------
+            }
+        }
+		stage('Push2DockerHub') {
+
+			steps {
+				sh "docker push balcha/stackfusion:latest"
+			}
+		}
+		stage('Deploy to Kubernetes Cluster') {
+            steps {
+		script {
+               sshPublisher(publishers: [sshPublisherDesc(configName: 'kubernetescluster', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'kubectl apply -f bankingdeployment.yaml', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '.', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '*.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])}
+        }
     }
+   }
 }
