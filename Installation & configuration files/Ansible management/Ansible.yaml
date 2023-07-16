@@ -1,0 +1,30 @@
+---
+ - hosts: samplenode1
+   become: yes
+   tasks:
+   - name: Install git service
+     yum:
+       name: git
+       state: present
+
+   - name: Install Maven service
+     yum:
+       name: maven
+       state: present
+
+   - name: Install Tomcat service
+     yum:
+       name: tomcat
+       state: present
+
+  - name: Install Docker Engine
+     yum:
+       name: docker
+       state: present
+       become: yes     
+
+  - name: Install JDK
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+    

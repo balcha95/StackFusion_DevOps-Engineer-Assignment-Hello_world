@@ -1,0 +1,94 @@
+Ansible Installation & Configurations:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Login to Ansible Node1 & Node2. Perform below activities:
+
+#Add User in Ansible Nodes : 
+
+useradd -m -d /home/ansibleadmin ansibleadmin
+
+passwd ansibleadmin
+
+#Enter New Password:
+#Confirm Password:
+
+#Goto:
+
+vi /etc/ssh/sshd_config
+
+#Enable Password Authentication to Yes and save the file
+#Execute Below command to update the changes.
+
+service sshd reload
+
+#As a root user edit below file:
+
+$ visudo
+
+#add the below mentioned line in the file and save it.
+ansibleadmin ALL=(ALL) NOPASSWD: ALL
+#devopsadmin ALL=(ALL) NOPASSWD: ALL
+
+su - ansibleadmin
+
+ls -a 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Login to Ansible Controller:
+
+#Install epel Package :
+#Install Ansible 
+
+amazon-linux-extras install epel
+amazon-linux-extras install ansible2
+
+#go to /etc/ansible
+
+#host - inventory file
+#config
+#roles 
+
+#Add User in Ansible Controller : 
+
+
+useradd -m -d /home/devopsadmin devopsadmin
+chown -R devopsadmin:devopsadmin /etc/ansible
+
+su - devopsadmin
+
+ssh-keygen
+
+ssh-copy-id ansibleadmin@65.0.45.220
+ssh-copy-id ansibleadmin@3.108.53.114
+
+ssh ansibleadmin@65.0.45.220
+ssh ansibleadmin@3.108.53.114
+
+
+###update vi etc/ansible/host
+
+[testnodes]
+samplenode1 ansible_ssh_host=65.0.45.220 ansible_ssh_user=ansibleadmin 
+samplenode2 ansible_ssh_host=3.108.53.114 ansible_ssh_user=ansibleadmin
+
+
+[testnodes1]
+samplenode1 ansible_ssh_host=65.0.45.220 ansible_ssh_user=ansibleadmin 
+samplenode2 ansible_ssh_host=3.108.53.114 ansible_ssh_user=ansibleadmin
+
+#**************************************
+#hosts file is the default Inventory file for ansible 
+
+#**************************************************************************************************************************
+#Access thru Ansible Controller :
+#**************************************************************************************************************************
+
+ansible <hosts_name> -m <module_name> -i <inventory_file>
+
+ansible testnodes -m ping
+
+#host machines can be idenfified using :
+#all | group_name | individual_host_name
+
+
